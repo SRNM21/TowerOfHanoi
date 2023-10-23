@@ -13,6 +13,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Stack;
 
 import javax.swing.BorderFactory;
@@ -28,15 +30,23 @@ import javax.swing.Timer;
 
 public class Game implements KeyListener
 {   
-    private int currentDisks = 3;
+    /* 
+    * STATUS
+    */
+    private int diskCount = 3;
+    private Disk currentDisk = null;
+    private Peg prevPeg = null;
 
-    private Disk heldDisk = null;
-    private Rod prevRod = null;
-
+    /* 
+    * FLAGS
+    */
     private boolean placeFlag = true;    
     private boolean startFlag = true;
     private boolean finished = false;    
 
+    /* 
+    * PROGRESS COMPONENTS
+    */
     private int sec = 0;    
     private int min = 0;
     private int hrs = 0;
@@ -45,11 +55,14 @@ public class Game implements KeyListener
     private final JFrame frame = new JFrame("Tower of Hanoi");
     private final JLabel timeLbl = new JLabel("Time: 0s");
     private final JLabel movesLbl = new JLabel("Moves: " + moves);
-    private final JLabel disks = new JLabel("Disk: " + currentDisks);
-
-    private final Rod rod1 = new Rod(currentDisks);
-    private final Rod rod2 = new Rod(0);
-    private final Rod rod3 = new Rod(0);
+    private final JLabel noOfDisksLbl = new JLabel("Disk: " + diskCount);
+        
+    /* 
+    * RODS
+    */
+    private final Peg pegA = new Peg(diskCount);
+    private final Peg pegB = new Peg(0);
+    private final Peg pegC = new Peg(0);
 
     Game()
     {   
@@ -57,87 +70,78 @@ public class Game implements KeyListener
         frame.getContentPane().setBackground(new Color(222, 226, 230));
         frame.setSize(TowerOfHanoi.FRAME_WIDTH, TowerOfHanoi.FRAME_HEIGHT);
         frame.setLocationRelativeTo(null);
-        frame.setResizable(false);
-        frame.add(gamePanel());
-        frame.setVisible(true);
-        frame.addKeyListener(this);
+        frame.setResizable(false);        
         frame.setFocusable(true);
-        frame.requestFocus();
-    }
+        frame.addKeyListener(this);
+        frame.requestFocus();        
+        frame.addWindowListener(new WindowAdapter() 
+        { 
+            public void windowClosing(WindowEvent we) 
+            {
+                close(); 
+            } 
+        });
 
-    private JPanel gamePanel()
-    {
         JPanel gamePnl = new JPanel();
         gamePnl.setSize(TowerOfHanoi.FRAME_WIDTH, TowerOfHanoi.FRAME_HEIGHT);
         gamePnl.setLayout(new BoxLayout(gamePnl, BoxLayout.Y_AXIS));
         gamePnl.setBackground(new Color(222, 226, 230));
         gamePnl.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
-        /* Progress Info */
-        JPanel progressBx = new JPanel(new GridLayout(1, 2));      
-        progressBx.setMaximumSize(new Dimension(TowerOfHanoi.FRAME_WIDTH, 100));    
-        progressBx.setBackground(new Color(222, 226, 230));
+        /* 
+         * PROGRESS COMPONENTS
+        */
+        JPanel progressPnl = new JPanel(new GridLayout(1, 2));      
+        progressPnl.setMaximumSize(new Dimension(TowerOfHanoi.FRAME_WIDTH, 100));    
+        progressPnl.setBackground(new Color(222, 226, 230));
 
         JPanel timePnl = new JPanel(new FlowLayout(FlowLayout.LEFT));
         timePnl.setBackground(new Color(222, 226, 230));
 
-        timeLbl.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(34f));
-        timePnl.add(timeLbl);
-
         JPanel movesPnl = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         movesPnl.setBackground(new Color(222, 226, 230));
         
+        timeLbl.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(34f));
         movesLbl.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(34f));
-        movesPnl.add(movesLbl);
-
-        progressBx.add(timePnl);        
-        progressBx.add(movesPnl);
         
-        JPanel rods = new JPanel(new GridLayout(1, 3));
-        rods.setPreferredSize(new Dimension(TowerOfHanoi.FRAME_WIDTH, 400));    
-        rods.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
-        rods.setBackground(new Color(222, 226, 230));
+        /* 
+         * GAME COMPONENTS
+        */
+        JPanel RODS = new JPanel(new GridLayout(1, 3));
+        RODS.setPreferredSize(new Dimension(TowerOfHanoi.FRAME_WIDTH, 400));    
+        RODS.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
+        RODS.setBackground(new Color(222, 226, 230));
 
-        rods.add(rod1, new GridLayout());
-        rods.add(rod2, new GridLayout());
-        rods.add(rod3, new GridLayout());
+        JPanel utilityPnl = new JPanel(new GridLayout(1, 2));        
+        utilityPnl.setBackground(Color.red);
+        utilityPnl.setMaximumSize(new Dimension(TowerOfHanoi.FRAME_WIDTH, 200));    
 
-        /* Utilities */
-        JPanel utils = new JPanel(new GridLayout(1, 2));        
-        utils.setBackground(Color.red);
-        utils.setMaximumSize(new Dimension(TowerOfHanoi.FRAME_WIDTH, 200));    
+        JPanel noOfDiskPnl = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        noOfDiskPnl.setBackground(new Color(222, 226, 230));
 
-        JPanel disksMan = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        disksMan.setBackground(new Color(222, 226, 230));
-
-        disks.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(34f));
+        noOfDisksLbl.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(34f));
         
-        JButton diskRemBtn = new JButton("-");
-        diskRemBtn.setPreferredSize(new Dimension(50, 50));        
-        diskRemBtn.setBackground(Color.WHITE);
-        diskRemBtn.setBorder(new LineBorder(Color.BLACK, 5));
-        diskRemBtn.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(28f));
-        diskRemBtn.setFocusPainted(false);
-        diskRemBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        diskRemBtn.addActionListener((e) -> { decrementDisk(); });
+        JButton decrementDiskBtn = new JButton("-");
+        decrementDiskBtn.setPreferredSize(new Dimension(50, 50));        
+        decrementDiskBtn.setBackground(Color.WHITE);
+        decrementDiskBtn.setBorder(new LineBorder(Color.BLACK, 5));
+        decrementDiskBtn.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(28f));
+        decrementDiskBtn.setFocusPainted(false);
+        decrementDiskBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        decrementDiskBtn.addActionListener((e) -> { decrementDisk(); });
         
-        JButton diskAddBtn = new JButton("+");
-        diskAddBtn.setPreferredSize(new Dimension(50, 50));        
-        diskAddBtn.setBackground(Color.WHITE);
-        diskAddBtn.setBorder(new LineBorder(Color.BLACK, 5));
-        diskAddBtn.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(28f));
-        diskAddBtn.setFocusPainted(false);
-        diskAddBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        diskAddBtn.addActionListener((e) -> { incrementDisk(); });
+        JButton incrementDiskBtn = new JButton("+");
+        incrementDiskBtn.setPreferredSize(new Dimension(50, 50));        
+        incrementDiskBtn.setBackground(Color.WHITE);
+        incrementDiskBtn.setBorder(new LineBorder(Color.BLACK, 5));
+        incrementDiskBtn.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(28f));
+        incrementDiskBtn.setFocusPainted(false);
+        incrementDiskBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        incrementDiskBtn.addActionListener((e) -> { incrementDisk(); });
         
-        disksMan.add(disks);        
-        disksMan.add(Box.createRigidArea(new Dimension(10, disksMan.getHeight())));
-        disksMan.add(diskRemBtn);
-        disksMan.add(diskAddBtn);
-
-        JPanel utilBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        utilBtns.setPreferredSize(new Dimension(TowerOfHanoi.FRAME_WIDTH / 2, 50));  
-        utilBtns.setBackground(new Color(222, 226, 230));
+        JPanel utilityBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        utilityBtns.setPreferredSize(new Dimension(TowerOfHanoi.FRAME_WIDTH / 2, 50));  
+        utilityBtns.setBackground(new Color(222, 226, 230));
 
         JButton exitBtn = new JButton("Exit");
         exitBtn.setPreferredSize(new Dimension(120, 50));        
@@ -156,25 +160,44 @@ public class Game implements KeyListener
         resetBtn.setFocusPainted(false);
         resetBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         resetBtn.addActionListener((e) -> { reset(); });
+
+        /* 
+         * PLACING COMPONENTS
+        */
+        timePnl.add(timeLbl);
+        movesPnl.add(movesLbl);
+
+        progressPnl.add(timePnl);        
+        progressPnl.add(movesPnl);
+
+        RODS.add(pegA, new GridLayout());
+        RODS.add(pegB, new GridLayout());
+        RODS.add(pegC, new GridLayout());
+
+        noOfDiskPnl.add(noOfDisksLbl);        
+        noOfDiskPnl.add(Box.createRigidArea(new Dimension(10, noOfDiskPnl.getHeight())));
+        noOfDiskPnl.add(decrementDiskBtn);
+        noOfDiskPnl.add(incrementDiskBtn);
+
+        utilityBtns.add(exitBtn);
+        utilityBtns.add(resetBtn);
+
+        utilityPnl.add(noOfDiskPnl);
+        utilityPnl.add(utilityBtns);
+
+        gamePnl.add(progressPnl);
+        gamePnl.add(RODS);
+        gamePnl.add(utilityPnl);
         
-        utilBtns.add(exitBtn);
-        utilBtns.add(resetBtn);
-
-        utils.add(disksMan);
-        utils.add(utilBtns);
-
-        gamePnl.add(progressBx);
-        gamePnl.add(rods);
-        gamePnl.add(utils);
-
-        return gamePnl;
+        frame.add(gamePnl);
+        frame.setVisible(true);
     }
 
     private void incrementDisk()
     {
-        if (currentDisks < 8)
+        if (diskCount < 8)
         {
-            ++currentDisks;
+            ++diskCount;
             reset();
         }
 
@@ -183,9 +206,9 @@ public class Game implements KeyListener
 
     private void decrementDisk()
     {                
-        if (currentDisks > 3)
+        if (diskCount > 3)
         {        
-            --currentDisks;
+            --diskCount;
             reset();
         }        
         
@@ -197,57 +220,54 @@ public class Game implements KeyListener
         timer.stop();
         timeLbl.setText("Time: 0s");
         movesLbl.setText("Moves: 0");
-        disks.setText("Disk: " + currentDisks);
+        noOfDisksLbl.setText("Disk: " + diskCount);
         frame.requestFocus();
-        heldDisk = null;
-        prevRod = null;
+        currentDisk = null;
+        prevPeg = null;
         startFlag = true;
         placeFlag = true;
         finished = false;
         sec = 0;
         moves = 0;
 
-        rod1.clearRod();
-        rod2.clearRod();
-        rod3.clearRod();
+        pegA.clearPeg();
+        pegB.clearPeg();
+        pegC.clearPeg();
 
-        for (int i = 1; i <= currentDisks; i++) rod1.addDisk(i);
+        for (int i = 1; i <= diskCount; i++) pegA.addDisk(i);
     }
 
-    private void getTopDisk(Rod rod)
+    private void getTopDisk(Peg peg)
     {
-        System.out.println("Get Disk");
-
-        if (rod.getDiskCount() > 0)
+        if (peg.getDiskCount() > 0)
         {
-            Disk currDisk = (Disk) rod.peekTopDisk();
-            currDisk.highlightDisk();
+            Disk currDisk = (Disk) peg.peek();
+            currDisk.highlightDisk(true);
 
-            heldDisk = currDisk;
-            prevRod = rod;
+            currentDisk = currDisk;
+            prevPeg = peg;
             placeFlag = false;
         }
     }
 
-    private void placeDisk(Rod rod)
+    private void placeDisk(Peg peg)
     {
-        System.out.println("Place Disk");
-
-        if (heldDisk == null) return;
-        
-        heldDisk.unhighlightDisk();
+        currentDisk.highlightDisk(false);
         placeFlag = true;
 
-        if (rod.getDiskCount() > 0 && (heldDisk.getStatus() > rod.peekTopDisk().getStatus())) return;
-        if (rod == prevRod) return;
+        /*
+         * Prevents:
+         *      place disk on the same peg 
+         *      place disk on the top of the smaller disk
+         */
+        if ((peg == prevPeg) || (peg.getDiskCount() > 0 && (currentDisk.getStatus() > peg.peek().getStatus()))) return;
 
-        heldDisk.unhighlightDisk();
-        prevRod.getTopDisk();
-        rod.addDisk(heldDisk);
+        prevPeg.getTopDisk();
+        peg.placeDisk(currentDisk);
         movesLbl.setText("Moves: " + ++moves);
 
-        heldDisk = null;
-        prevRod = null;
+        currentDisk = null;
+        prevPeg = null;
 
         if (startFlag) 
         {
@@ -259,43 +279,42 @@ public class Game implements KeyListener
         {
             timer.stop();
             finished = true;
-            JOptionPane.showMessageDialog(null, "You successfully completed the tower! \nPress reset to play again", "Tower of Hanoi", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, 
+                "You successfully completed the tower! \nPress reset to play again.", 
+                "Tower of Hanoi", 
+                JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     public boolean isFinished()
     {
-        if (rod1.getRef().size() != rod3.getStack().size()) return false;
-        return rod1.getRef().toString().equals(rod3.getStack().toString());
+        if (pegA.getReference().size() != pegC.getStack().size()) return false;
+        return pegA.getReference().toString().equals(pegC.getStack().toString());
     }
 
     @Override
     public void keyTyped(KeyEvent e) 
     {
-        if (placeFlag && !finished)
+        if (finished) return;
+
+        if (placeFlag)
         {
             switch (e.getKeyChar())
             {
-                case 'a' -> { getTopDisk(rod1); }
-                case 's' -> { getTopDisk(rod2); }
-                case 'd' -> { getTopDisk(rod3); }
+                case 'a' -> { getTopDisk(pegA); }
+                case 's' -> { getTopDisk(pegB); }
+                case 'd' -> { getTopDisk(pegC); }
             }
         }
         else
         {
             switch (e.getKeyChar())
             {
-                case 'a' -> { placeDisk(rod1); }
-                case 's' -> { placeDisk(rod2); }
-                case 'd' -> { placeDisk(rod3); }
+                case 'a' -> { placeDisk(pegA); }
+                case 's' -> { placeDisk(pegB); }
+                case 'd' -> { placeDisk(pegC); }
             }
         }
-
-        System.out.println("Rod1 : " + rod1.getDiskCount() + " - Stack : " + rod1.getStack().toString());
-        System.out.println("Rod2 : " + rod2.getDiskCount() + " - Stack : " + rod2.getStack().toString());
-        System.out.println("Rod3 : " + rod3.getDiskCount() + " - Stack : " + rod3.getStack().toString());
-        System.out.println("REF(Rod1) : " + rod1.getRef().toString() + " - Rod3 : " + rod3.getStack().toString());
-        System.out.println("Finished : " + finished);
     }
 
     @Override
@@ -331,81 +350,98 @@ public class Game implements KeyListener
 
     private void close()
     {
-        int confirm = JOptionPane.showConfirmDialog(null, "Do you really want to exit the game?", "Tower of Hanoi", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(null, 
+            "Do you really want to exit the game?", 
+            "Tower of Hanoi", 
+            JOptionPane.YES_NO_OPTION);
         
         if (confirm == JOptionPane.OK_OPTION) frame.dispose();
+        else if (confirm == JOptionPane.NO_OPTION) frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
 }
 
-class Rod extends JPanel
+/*
+ * GAME PEG
+ */
+class Peg extends JPanel
 {
-    private final int ROD_WIDTH = 20;
-    private final int ROD_HEIGHT = 500;
-    private final Box box = Box.createVerticalBox();
+    /*
+    * ROD ATTRIBUTES
+    */
+    private final int PEG_WIDTH = 20;
+    private final int PEG_HEIGHT = 500;
 
     private Stack<Integer> stack = new Stack<Integer>();
-    private Stack<Integer> ref = new Stack<Integer>();;
+    private Stack<Integer> reference = new Stack<Integer>();
+
+    /*
+    * CONTAINER
+    */    
+    private final Box content = Box.createVerticalBox();
 
     @Override
     protected void paintComponent(Graphics g) 
     {
         super.paintComponent(g);
 
+        // Paint rod
         g.setColor(Color.BLACK);
-        g.fillRect((this.getWidth() / 2) - (ROD_WIDTH / 2), 80, ROD_WIDTH, ROD_HEIGHT);
+        g.fillRect((this.getWidth() - PEG_WIDTH) / 2, 80, PEG_WIDTH, PEG_HEIGHT);
     }
 
-    public Rod(int disks)
+    public Peg(int disks)
     {
         this.setLayout(new BorderLayout());
         this.setBackground(new Color(222, 226, 230));
-        add(box, BorderLayout.SOUTH);
+        add(content, BorderLayout.SOUTH);
 
         for (int i = 1; i <= disks; i++) this.addDisk(i);
     }
 
     public void addDisk(int stat)
     {
-        ref.add(0, stat);
+        reference.add(0, stat);
         stack.add(0, stat);
-        box.add(new Disk(stat));
-        box.repaint();
-        box.revalidate();
+        content.add(new Disk(stat));
+        update();
     }
 
-    public void addDisk(Disk disk)
+    public void placeDisk(Disk disk)
     {
         stack.add(disk.getStatus());
-        box.add(disk, 0);
-        box.repaint();
-        box.revalidate();
+        content.add(disk, 0);
+        update();
     }
         
-    public void clearRod()
+    public void clearPeg()
     {
-        ref.clear();
+        reference.clear();
         stack.clear();
-        box.removeAll();
-        box.repaint();
-        box.revalidate();
+        content.removeAll();
+        update();
     }
 
-    public Disk peekTopDisk()
+    public Disk peek()
     {
-        return (Disk) box.getComponent(0);
+        return (Disk) content.getComponent(0);
     }
         
     public void getTopDisk()
     {
         stack.pop();
-        box.remove(0);
-        box.repaint();
-        box.revalidate();
+        content.remove(0);
+        update();
     }
 
     public int getDiskCount()
     {
-        return box.getComponentCount();
+        return content.getComponentCount();
+    }
+
+    private void update()
+    {
+        content.repaint();
+        content.revalidate();
     }
 
     public Stack<Integer> getStack()
@@ -413,12 +449,15 @@ class Rod extends JPanel
         return stack;
     }
 
-    public Stack<Integer> getRef()
+    public Stack<Integer> getReference()
     {
-        return ref;
+        return reference;
     }
 }
 
+/*
+ * GAME DISK
+ */
 class Disk extends JPanel
 {
     private int status = 0;
@@ -426,11 +465,11 @@ class Disk extends JPanel
     public Disk(int stat) 
     {
         this.status = stat;
-        this.setBorder(new LineBorder(Color.BLACK, 5));
         this.setBackground(Color.BLUE);
+        this.setBorder(new LineBorder(Color.BLACK, 5));
         this.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        /* Default size */
+        // Default size
         Dimension size = new Dimension(80, 40);
 
         switch (stat) 
@@ -449,14 +488,9 @@ class Disk extends JPanel
         this.setMaximumSize(size);
     }
 
-    public void highlightDisk()
+    public void highlightDisk(boolean flag)
     {
-        this.setBorder(new LineBorder(Color.RED, 5));
-    }
-
-    public void unhighlightDisk()
-    {
-        this.setBorder(new LineBorder(Color.BLACK, 5));
+        this.setBorder(new LineBorder(flag ? Color.RED : Color.BLACK, 5));
     }
 
     public int getStatus()
