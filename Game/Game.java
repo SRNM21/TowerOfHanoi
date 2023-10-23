@@ -259,6 +259,7 @@ public class Game implements KeyListener
          * Prevents:
          *      place disk on the same peg 
          *      place disk on the top of the smaller disk
+         * 
          */
         if ((peg == prevPeg) || (peg.getDiskCount() > 0 && (currentDisk.getStatus() > peg.peek().getStatus()))) return;
 
