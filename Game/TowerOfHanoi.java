@@ -24,19 +24,45 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 
+/**
+ * <p>Simple GUI program of Tower of Hanoi.</p>
+ * 
+ * <p>This Class/Frame contains rules and instruction on how to play/use this program.</p>
+ * 
+ * @author GreggyBoii (Gengar)
+ * @since 1.0
+ */
 public class TowerOfHanoi 
 {
     /* 
     * FRAME ATTRIBUTES
     */
+    
+    /**
+     * Preffered program's frame height.
+     */
     protected static final int FRAME_HEIGHT = 800;
+
+    /**
+     * Preffered program's frame width.
+     */
     protected static final int FRAME_WIDTH = 1300;
+    
+    /**
+     * Preffered font for this program.
+     */
     protected static final Font CENTURY_GOTHIC = new Font("Century Gothic", Font.BOLD, 12);        
 
     public static void main(String[] args) { SwingUtilities.invokeLater(() -> new TowerOfHanoi()); }
 
+    /**
+     * Constructor of instruction frame.
+     */
     TowerOfHanoi()
     {   
+        /**
+         * Instruction's Frame.
+         */
         JFrame frame = new JFrame("Tower of Hanoi");
         frame.setIconImage(Toolkit.getDefaultToolkit().getImage("Images\\Icon.png"));
         frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
@@ -44,13 +70,16 @@ public class TowerOfHanoi
         frame.setLocationRelativeTo(null);        
         frame.getContentPane().setBackground(new Color(222, 226, 230));
         frame.addWindowListener(new WindowAdapter() 
-        { 
+        {
             public void windowClosing(WindowEvent we) 
-            { 
+            {
                 close(frame); 
-            } 
+            }
         });
         
+        /**
+         * Instruction's Panel.
+         */
         JPanel InstructionPnl = new JPanel();
         InstructionPnl.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         InstructionPnl.setLayout(new BoxLayout(InstructionPnl, BoxLayout.Y_AXIS));
@@ -145,7 +174,7 @@ public class TowerOfHanoi
         instructionContBx.setBorder(BorderFactory.createEmptyBorder(0, 40, 30, 40));
                         
         /* 
-         * PLACING COMPONENTS
+         * ADDING COMPONENTS
         */
         selectDiskImgBx.add(selectDiskLbl);
         selectDiskImgBx.add(selectDiskImg);
@@ -174,6 +203,11 @@ public class TowerOfHanoi
         frame.setVisible(true);
     }
     
+    /**
+     * Asks user for confirmation on exit.
+     * 
+     * @param frame frame to implement closing confirmation
+     */
     private void close(JFrame frame)
     {
         int confirm = JOptionPane.showConfirmDialog(null, 

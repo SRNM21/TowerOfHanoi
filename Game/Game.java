@@ -28,42 +28,125 @@ import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 import javax.swing.Timer;
 
+/**
+ * <p>Simple GUI program of Tower of Hanoi.</p>
+ * 
+ * <p>This Class/Frame contains the main game of the program.</p>
+ * 
+ * @author GreggyBoii (Gengar)
+ * @since 1.0
+ */
 public class Game implements KeyListener
 {   
     /* 
     * STATUS
     */
+
+    /**
+     * Current number of {@code disks} on the game.
+     */
     private int diskCount = 3;
+    
+    /**
+     * Holds the {@code disk} object to be placed on a specified {@code peg}.
+     */
     private Disk currentDisk = null;
+
+    /**
+     * Holds the address of the picked {@code disk's} {@code peg}.
+     */
     private Peg prevPeg = null;
 
     /* 
     * FLAGS
     */
+    
+    /**
+     * Flag to identify whether you place or select a {@code disk}.
+     */
     private boolean placeFlag = true;    
+    
+    /**
+     * Sets the timer only when the game is started.
+     */
     private boolean startFlag = true;
+    
+    /**
+     * Freeze the {@code pegs} and timer once the game is completed.
+     */
     private boolean finished = false;    
 
     /* 
     * PROGRESS COMPONENTS
-    */
-    private int sec = 0;    
+    */  
+
+    /**
+     * Indicates the seconds in to the game.
+     */
+    private int sec = 0;   
+
+    /**
+     * Indicates the minutes in to the game.
+     */ 
     private int min = 0;
+    
+    /**
+     * Indicates the hours in to the game.
+     */ 
     private int hrs = 0;
+    
+    /**
+     * Indicates the number of moves made.
+     */ 
     private int moves = 0;
 
+    /**
+     * JFrame component for the main frame.
+     */ 
     private final JFrame frame = new JFrame("Tower of Hanoi");
+
+    /**
+     * JLabel component that display the current time.
+     */ 
     private final JLabel timeLbl = new JLabel("Time: 0s");
+
+    /**
+     * JLabel component that display the moves made.
+     */ 
     private final JLabel movesLbl = new JLabel("Moves: " + moves);
+
+    /**
+     * JLabel component that display the current number of {@code disks}.
+     */ 
     private final JLabel noOfDisksLbl = new JLabel("Disk: " + diskCount);
-        
+
+    /**
+     * JLabel component that display the best possible number of moves.
+     */ 
+    private final JLabel bestMoveLbl = new JLabel("Best Moves: 7");
+    
     /* 
-    * RODS
+    * PEGS
     */
+
+    /**
+     * {@code Peg A} Object with already has three {@code disk} to start.
+     */ 
     private final Peg pegA = new Peg(diskCount);
+
+    /**
+     * {@code Peg B} Object that can be place {@code disk} with.
+     */ 
     private final Peg pegB = new Peg(0);
+
+    /**
+     * {@code Peg C} Object that can be place {@code disk} with.
+     */ 
     private final Peg pegC = new Peg(0);
 
+    /**
+     * Constructor of the main game frame.
+     */
     Game()
     {   
         frame.setIconImage(Toolkit.getDefaultToolkit().getImage("Images\\Icon.png"));
@@ -86,7 +169,7 @@ public class Game implements KeyListener
         gamePnl.setSize(TowerOfHanoi.FRAME_WIDTH, TowerOfHanoi.FRAME_HEIGHT);
         gamePnl.setLayout(new BoxLayout(gamePnl, BoxLayout.Y_AXIS));
         gamePnl.setBackground(new Color(222, 226, 230));
-        gamePnl.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        gamePnl.setBorder(BorderFactory.createEmptyBorder(20, 30, 30, 30));
 
         /* 
          * PROGRESS COMPONENTS
@@ -107,19 +190,19 @@ public class Game implements KeyListener
         /* 
          * GAME COMPONENTS
         */
-        JPanel RODS = new JPanel(new GridLayout(1, 3));
-        RODS.setPreferredSize(new Dimension(TowerOfHanoi.FRAME_WIDTH, 400));    
-        RODS.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
-        RODS.setBackground(new Color(222, 226, 230));
+        JPanel pegsPnl = new JPanel(new GridLayout(1, 3));
+        pegsPnl.setPreferredSize(new Dimension(TowerOfHanoi.FRAME_WIDTH, 400));    
+        pegsPnl.setBorder(BorderFactory.createEmptyBorder(0, 0, 100, 0));
+        pegsPnl.setBackground(new Color(222, 226, 230));
 
         JPanel utilityPnl = new JPanel(new GridLayout(1, 2));        
-        utilityPnl.setBackground(Color.red);
         utilityPnl.setMaximumSize(new Dimension(TowerOfHanoi.FRAME_WIDTH, 200));    
 
         JPanel noOfDiskPnl = new JPanel(new FlowLayout(FlowLayout.LEFT));
         noOfDiskPnl.setBackground(new Color(222, 226, 230));
 
         noOfDisksLbl.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(34f));
+        bestMoveLbl.setFont(TowerOfHanoi.CENTURY_GOTHIC.deriveFont(34f));
         
         JButton decrementDiskBtn = new JButton("-");
         decrementDiskBtn.setPreferredSize(new Dimension(50, 50));        
@@ -162,7 +245,7 @@ public class Game implements KeyListener
         resetBtn.addActionListener((e) -> { reset(); });
 
         /* 
-         * PLACING COMPONENTS
+         * ADDING COMPONENTS
         */
         timePnl.add(timeLbl);
         movesPnl.add(movesLbl);
@@ -170,14 +253,16 @@ public class Game implements KeyListener
         progressPnl.add(timePnl);        
         progressPnl.add(movesPnl);
 
-        RODS.add(pegA, new GridLayout());
-        RODS.add(pegB, new GridLayout());
-        RODS.add(pegC, new GridLayout());
+        pegsPnl.add(pegA, new GridLayout());
+        pegsPnl.add(pegB, new GridLayout());
+        pegsPnl.add(pegC, new GridLayout());
 
         noOfDiskPnl.add(noOfDisksLbl);        
         noOfDiskPnl.add(Box.createRigidArea(new Dimension(10, noOfDiskPnl.getHeight())));
         noOfDiskPnl.add(decrementDiskBtn);
         noOfDiskPnl.add(incrementDiskBtn);
+        noOfDiskPnl.add(Box.createRigidArea(new Dimension(30, noOfDiskPnl.getHeight())));
+        noOfDiskPnl.add(bestMoveLbl);
 
         utilityBtns.add(exitBtn);
         utilityBtns.add(resetBtn);
@@ -186,13 +271,16 @@ public class Game implements KeyListener
         utilityPnl.add(utilityBtns);
 
         gamePnl.add(progressPnl);
-        gamePnl.add(RODS);
+        gamePnl.add(pegsPnl);
         gamePnl.add(utilityPnl);
         
         frame.add(gamePnl);
         frame.setVisible(true);
     }
 
+    /**
+     * Increments the number of {@code disk}.
+     */
     private void incrementDisk()
     {
         if (diskCount < 8)
@@ -204,6 +292,9 @@ public class Game implements KeyListener
         frame.requestFocus();
     }
 
+    /**
+     * Decrements the number of {@code disk}.
+     */
     private void decrementDisk()
     {                
         if (diskCount > 3)
@@ -215,13 +306,20 @@ public class Game implements KeyListener
         frame.requestFocus();
     }
 
+    /**
+     * Reset the all the progress made including the {@code pegs} and {@code disks}.
+     */
     private void reset()
     {
+        // Reset all the label's texts
         timer.stop();
         timeLbl.setText("Time: 0s");
         movesLbl.setText("Moves: 0");
         noOfDisksLbl.setText("Disk: " + diskCount);
+        bestMoveLbl.setText("Best Moves: " + (int) (Math.pow(2, diskCount) - 1));
         frame.requestFocus();
+
+        // Reset all the flags
         currentDisk = null;
         prevPeg = null;
         startFlag = true;
@@ -230,14 +328,21 @@ public class Game implements KeyListener
         sec = 0;
         moves = 0;
 
+        // Clear all pegs
         pegA.clearPeg();
         pegB.clearPeg();
         pegC.clearPeg();
 
+        // Reput the disk on Peg A
         for (int i = 1; i <= diskCount; i++) pegA.addDisk(i);
     }
 
-    private void getTopDisk(Peg peg)
+    /**
+     * Select the top most {@code disk} on the specific {@code peg}.
+     * 
+     * @param peg the {@code peg} where the {@code disk} is selected.
+     */
+    private void removeTopDisk(Peg peg)
     {
         if (peg.getDiskCount() > 0)
         {
@@ -250,19 +355,24 @@ public class Game implements KeyListener
         }
     }
 
+    /**
+     * Place the selected {@code disk} on the specified {@code peg}.
+     * 
+     * @param peg the {@code peg} where the {@code disk} is going to be placed.
+     */
     private void placeDisk(Peg peg)
     {
         currentDisk.highlightDisk(false);
         placeFlag = true;
 
         /*
-         * Prevents:
-         *      place disk on the same peg 
-         *      place disk on the top of the smaller disk
+         * Prevents placing disk on the :
+         *      - same peg 
+         *      - top of the smaller disk
          */
         if ((peg == prevPeg) || (peg.getDiskCount() > 0 && (currentDisk.getStatus() > peg.peek().getStatus()))) return;
 
-        prevPeg.getTopDisk();
+        prevPeg.removeTopDisk();
         peg.placeDisk(currentDisk);
         movesLbl.setText("Moves: " + ++moves);
 
@@ -286,6 +396,11 @@ public class Game implements KeyListener
         }
     }
 
+    /**
+     * Compares the reference stack from {@code Peg A} to the current stack of {@code Peg C} which determines if the game is finished.
+     * 
+     * @return {@code true} if {@code Peg A} reference stack is equals to the current stack of {@code Peg C}, {@code false} otherwise.
+     */
     public boolean isFinished()
     {
         if (pegA.getReference().size() != pegC.getStack().size()) return false;
@@ -301,9 +416,9 @@ public class Game implements KeyListener
         {
             switch (e.getKeyChar())
             {
-                case 'a' -> { getTopDisk(pegA); }
-                case 's' -> { getTopDisk(pegB); }
-                case 'd' -> { getTopDisk(pegC); }
+                case 'a' -> { removeTopDisk(pegA); }
+                case 's' -> { removeTopDisk(pegB); }
+                case 'd' -> { removeTopDisk(pegC); }
             }
         }
         else
@@ -323,6 +438,11 @@ public class Game implements KeyListener
     @Override
     public void keyReleased(KeyEvent e) {}
     
+    /**
+     * <p>Timer that indicates the current time in to the game.</p>
+     * 
+     * <p>Update the {@code timeLbl's} text every seconds in to the game.</p>
+     */
     private Timer timer = new Timer(1000, new ActionListener() 
     {   
         @Override
@@ -348,6 +468,9 @@ public class Game implements KeyListener
         }
     });
 
+    /**
+     * Asks user for confirmation on exit.
+     */
     private void close()
     {
         int confirm = JOptionPane.showConfirmDialog(null, 
@@ -363,20 +486,48 @@ public class Game implements KeyListener
 /*
  * GAME PEG
  */
+
+/**
+ * {@code Peg} class that inherits JPanel as a visual representation of the actual {@code peg}.
+ * 
+ * @author GreggyBoii (Gengar)
+ * @since 1.0
+ */
 class Peg extends JPanel
 {
     /*
-    * ROD ATTRIBUTES
+    * PEG ATTRIBUTES
     */
+    
+    /**
+     * Preffered width for {@code peg}.
+     */
     private final int PEG_WIDTH = 20;
-    private final int PEG_HEIGHT = 500;
+    
+    /**
+     * Preffered height for {@code peg}.
+     */
+    private final int PEG_HEIGHT = 400;
 
+    /**
+     * Main or current stack of the {@code peg} which updates eveytime the {@code disk} leave.
+     */
     private Stack<Integer> stack = new Stack<Integer>();
+
+    /**
+     * <p>reference stack that can not be update through ingame.</p>
+     * 
+     * <p>The elements of this stack is equals to the original elements of the main stack.</p>
+     */
     private Stack<Integer> reference = new Stack<Integer>();
 
     /*
     * CONTAINER
-    */    
+    */
+
+    /**
+     * The container of {@code peg} where the disk is visually placed.
+     */
     private final Box content = Box.createVerticalBox();
 
     @Override
@@ -384,11 +535,16 @@ class Peg extends JPanel
     {
         super.paintComponent(g);
 
-        // Paint rod
+        // Paint peg
         g.setColor(Color.BLACK);
-        g.fillRect((this.getWidth() - PEG_WIDTH) / 2, 80, PEG_WIDTH, PEG_HEIGHT);
+        g.fillRect((this.getWidth() - PEG_WIDTH) / 2, 120, PEG_WIDTH, PEG_HEIGHT);
     }
 
+    /**
+     * Constructor of {@code peg} class that add {@code disk} based on the passed integral value in the parameter.
+     * 
+     * @param disks indicate the number of {@code disks} on the {@code peg}.
+     */
     public Peg(int disks)
     {
         this.setLayout(new BorderLayout());
@@ -398,6 +554,11 @@ class Peg extends JPanel
         for (int i = 1; i <= disks; i++) this.addDisk(i);
     }
 
+    /**
+     * Add or increment {@code disk} object on this {@code peg}.
+     * 
+     * @param stat the hierarchy status of the {@code disk}.
+     */
     public void addDisk(int stat)
     {
         reference.add(0, stat);
@@ -406,13 +567,21 @@ class Peg extends JPanel
         update();
     }
 
+    /**
+     * Place passed {@code disk} object on this {@code peg}.
+     * 
+     * @param disk {@code disk} object to be placed.
+     */
     public void placeDisk(Disk disk)
     {
         stack.add(disk.getStatus());
         content.add(disk, 0);
         update();
     }
-        
+    
+    /**
+     * Clear all the {@code disk} objects on this {@code peg}.
+     */
     public void clearPeg()
     {
         reference.clear();
@@ -421,34 +590,60 @@ class Peg extends JPanel
         update();
     }
 
+    /**
+     * Look at the top most {@code disk} object on this {@code peg} without removing it.
+     * 
+     * @return the top most {@code disk}.
+     */
     public Disk peek()
     {
         return (Disk) content.getComponent(0);
     }
         
-    public void getTopDisk()
+    /**
+     * Remove the top most {@code disk} object on this {@code peg}.
+     */
+    public void removeTopDisk()
     {
         stack.pop();
         content.remove(0);
         update();
     }
 
+    /**
+     * Count the total number of {@code disk} object on this {@code peg}.
+     * 
+     * @return the total number of {@code disk}.
+     */
     public int getDiskCount()
     {
         return content.getComponentCount();
     }
 
+    /**
+     * Update or repaint the {@code pegs} user interfacee.
+     */
     private void update()
     {
         content.repaint();
         content.revalidate();
     }
 
+    /**
+     * Returns the current stack of this {@code peg}.
+     * 
+     * @return the current stack of this peg.
+     */
     public Stack<Integer> getStack()
     {
         return stack;
     }
 
+    /**
+     * Returns the reference stack of this {@code peg}.
+     * 
+     * @return the reference stack of this peg.
+     */
     public Stack<Integer> getReference()
     {
         return reference;
@@ -458,10 +653,23 @@ class Peg extends JPanel
 /*
  * GAME DISK
  */
+ 
+/**
+ * {@code Disk} class that inherits JPanel as a visual representation of the actual {@code disk}.
+ * 
+ * @author GreggyBoii (Gengar)
+ * @since 1.0
+ */
 class Disk extends JPanel
 {
+    /**
+     * Hierarchy status of the {@code disk}.
+     */
     private int status = 0;
 
+    /**
+     * Constructor of the {@code disk} class that initialize the status and size of the {@code disk}.
+     */
     public Disk(int stat) 
     {
         this.status = stat;
@@ -488,11 +696,19 @@ class Disk extends JPanel
         this.setMaximumSize(size);
     }
 
+    /**
+     * Change the disk's border color to red if {@code true} which identifies as highlighted, change the disk's border color to black otherwise.
+     * 
+     * @param flag if {@code true}, highlights (Change the border color to {@code red}) the border of disk, unhighlight otherwise.
+     */
     public void highlightDisk(boolean flag)
     {
         this.setBorder(new LineBorder(flag ? Color.RED : Color.BLACK, 5));
     }
 
+    /**
+     * Returns the hierarchy status of the disk.
+     */
     public int getStatus()
     {
         return status;
